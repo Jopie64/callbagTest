@@ -2,6 +2,7 @@ const a = 3;
 a
 
 const counter = timeout => (type, sink) => {
+    if (type !== 0) return; // Not start. Ignore it.
     let handle;
     let i = 0;
     const talkBack = (tbType, tbSink) => {
@@ -9,10 +10,8 @@ const counter = timeout => (type, sink) => {
             clearInterval(handle);
         }
     };
+    handle = setInterval(() => sink(1, i++), timeout);
     sink(0, talkBack);
-    if (type === 0) {
-        handle = setInterval(() => sink(1, i++), timeout);
-    }
 };
 
 const makePrinter = id => {
@@ -46,14 +45,15 @@ const map = transform => source => (_, sink) =>
 const take = nr => source => (_, sink) => {
     let talkBack;
     return source(0, (t, d) => {
-        if (t !== 1 || nr > 0) { sink(t, d); }
+        sink(t, d);
         if (t === 0) {
             talkBack = d;
         } else if (t === 1) {
-            if (nr-- <= 0) {
-                talkBack(2);
-                sink(2);
-            }
+            --nr;
+        }
+        if (nr <= 0) {
+            talkBack(2);
+            sink(2);
         }
     });
 };
@@ -71,10 +71,10 @@ pipe(
     map(i => i + 100),
     map(i => i * 2),
     map(i => 'Say it ' + i + ' times'),
-    take(3)
+    take(0)
 )(0, makePrinter(1));
 
 pipe(
     counter(200),
-    map(i => 'Say it ' + i + ' times')
+    map(i => 'Say it again ' + i + ' times')
 );//(0, makePrinter(2));
