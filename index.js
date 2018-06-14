@@ -43,7 +43,38 @@ const map = transform => source => (_, sink) =>
         ? sink(1, transform(d))
         : sink(t, d));
 
+const take = nr => source => (_, sink) => {
+    let talkBack;
+    return source(0, (t, d) => {
+        if (t !== 1 || nr > 0) { sink(t, d); }
+        if (t === 0) {
+            talkBack = d;
+        } else if (t === 1) {
+            if (nr-- <= 0) {
+                talkBack(2);
+                sink(2);
+            }
+        }
+    });
+};
+
+function pipe(source, operator, ...rest) {
+    if (!operator) {
+        return source;
+    }
+    return pipe(operator(source), ...rest);
+}
 
 
-map(i => i + 100)(counter(100))(0, makePrinter(1));
-map(i => 'Say it ' + i + ' times')(counter(200))(0, makePrinter(2));
+pipe(
+    counter(100),
+    map(i => i + 100),
+    map(i => i * 2),
+    map(i => 'Say it ' + i + ' times'),
+    take(3)
+)(0, makePrinter(1));
+
+pipe(
+    counter(200),
+    map(i => 'Say it ' + i + ' times')
+);//(0, makePrinter(2));
