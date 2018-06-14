@@ -14,29 +14,6 @@ const counter = timeout => (type, sink) => {
     sink(0, talkBack);
 };
 
-const makePrinter = id => {
-    let talkBack;
-    let count = 0;
-    return (type, data) => {
-        if(type === 0) {
-            talkBack = data;
-            console.log(id, 'Starting... Talkback: ', data);
-        }
-        if(type === 1) {
-            console.log(id, 'Received', count, data);
-            if (count === 10) {
-                console.log(id, 'Reached 10. Terminating.');
-                talkBack(2); // terminate at 10
-            }
-            ++count;
-        }
-        if(type === 2) {
-            console.log(id, 'End', data);
-            talkBack = undefined;
-        }
-    };
-};
-
 const map = transform => source => (_, sink) =>
     source(0, (t, d) => t === 1
         ? sink(1, transform(d))
@@ -65,13 +42,41 @@ function pipe(source, operator, ...rest) {
     return pipe(operator(source), ...rest);
 }
 
+const tap = f => source => (_, sink) =>
+    source(0, (t, d) => {
+        if (t === 1) f(d);
+        sink(t, d);
+    });
+
+
+const makePrinter = id => {
+    let count = 0;
+    return (type, data) => {
+        if(type === 0) {
+            console.log(id, 'Starting... Talkback: ', data);
+        }
+        if(type === 1) {
+            console.log(id, 'Next', ++count, data);
+        }
+        if(type === 2) {
+            console.log(id, 'End', data);
+        }
+    };
+};
+
+const peek = id => x => console.log('Peeking: ', id, x);
 
 pipe(
     counter(100),
+    tap(peek(1)),
     map(i => i + 100),
+    tap(peek(2)),
     map(i => i * 2),
+    tap(peek(3)),
     map(i => 'Say it ' + i + ' times'),
-    take(0)
+    tap(peek(4)),
+    take(3),
+    tap(peek(5))
 )(0, makePrinter(1));
 
 pipe(
