@@ -1,0 +1,14 @@
+{
+  "name": "callbagtest",
+  "version": "1.0.0",
+  "description": "Testing the callbag lib",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Johan 't Hart",
+  "license": "ISC",
+  "dependencies": {
+    "callbag": "^1.1.0"
+  }
+}
